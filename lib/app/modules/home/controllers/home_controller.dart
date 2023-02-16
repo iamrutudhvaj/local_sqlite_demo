@@ -1,23 +1,30 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:local_sqlite_demo/app/data/model/book_model.dart';
 import 'package:local_sqlite_demo/app/data/sqflite_service.dart';
 
 class HomeController extends GetxController {
-  @override
-  void onInit() {
-    dbOperations();
-    super.onInit();
-  }
+  TextEditingController bookNameController = TextEditingController();
+  TextEditingController bookAuthorController = TextEditingController();
 
-  Future<void> dbOperations() async {
+  Future<void> addBook() async {
     try {
-      await DatabaseService.insertRawInDB();
-      await DatabaseService.updateRawOfDB();
-      await DatabaseService.fetchRawsFromDB();
+      Get.dialog(
+        const Center(
+          child: CupertinoActivityIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+      await DatabaseService.insertBook(Book(
+        name: bookNameController.text,
+        author: bookAuthorController.text,
+      ));
+      bookAuthorController.clear();
+      bookNameController.clear();
+      Get.back();
     } catch (e) {
+      Get.back();
       debugPrint(e.toString());
-    } finally {
-      await DatabaseService.closeDB();
     }
   }
 }

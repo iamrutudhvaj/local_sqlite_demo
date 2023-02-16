@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'model/book_model.dart';
+
 class DatabaseService {
   static late Database db;
   static late String path;
@@ -20,7 +22,7 @@ class DatabaseService {
     db = await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       await db.execute(
-          'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)');
+          'CREATE TABLE BOOKS (id INTEGER PRIMARY KEY, name TEXT, author TEXT)');
     });
   }
 
@@ -28,19 +30,9 @@ class DatabaseService {
     await db.close();
   }
 
-  static Future<void> insertRawInDB() async {
-    await db.transaction((txn) async {
-      int id1 = await txn.rawInsert(
-          'INSERT INTO Test(name, value, num) VALUES("some name", 1234, 456.789)');
-      print('inserted1: $id1');
-      int id2 = await txn.rawInsert(
-          'INSERT INTO Test(name, value, num) VALUES(?, ?, ?)',
-          ['another name', 12345678, 3.1416]);
-      print('inserted2: $id2');
-    });
-    int id3 = await db.insert(
-        'Test', {"name": 'another name', "value": 12345678, "num": 3.1416});
-    print('inserted3: $id3');
+  static Future<void> insertBook(Book book) async {
+    int id = await db.insert('BOOKS', book.toJson());
+    print('${book.toJson()} inserted: $id');
   }
 
   static Future<void> updateRawOfDB() async {
@@ -50,8 +42,10 @@ class DatabaseService {
     print('updated: $count');
   }
 
-  static Future<void> fetchRawsFromDB() async {
-    List<Map> list = await db.rawQuery('SELECT * FROM Test');
-    print(list);
+  static Future<List<Book>> fetchBooks() async {
+    List<Map> list = await db.rawQuery('SELECT * FROM BOOKS');
+    var dataList =
+        list.map((e) => Book.fromJson(e as Map<String, dynamic>)).toList();
+    return dataList;
   }
 }
